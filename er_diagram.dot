@@ -1,0 +1,26 @@
+// ER diagram in Graphviz DOT format for the E-Book Management System
+// Save as er_diagram.dot and render with Graphviz (dot -Tpng er_diagram.dot -o er_diagram.png)
+
+digraph ER {
+  rankdir=LR;
+  node [shape=record, fontsize=10];
+
+  Roles [label="{Roles|role_id PK\lrole_name\l}"];
+  Users [label="{Users|user_id PK\lname\lemail\lpassword_hash\lrole_id FK->Roles\l}"];
+  Categories [label="{Categories|category_id PK\lcategory_name\ldescription\l}"];
+  EBooks [label="{EBooks|book_id PK\ltitle\ldescription\lfile_url\lcategory_id FK->Categories\lauthor_id FK->Users\lpublisher_id?\lpublished_date\l}"];
+  Bookmarks [label="{Bookmarks|bookmark_id PK\luser_id FK->Users\lbook_id FK->EBooks\lcreated_at\l}"];
+  ReadingHistory [label="{ReadingHistory|history_id PK\luser_id FK->Users\lbook_id FK->EBooks\llast_accessed\l}"];
+  Feedback [label="{Feedback|feedback_id PK\lreader_id FK->Users\lbook_id FK->EBooks\lrating\lcomment\l}"];
+
+  // Relationships
+  Roles -> Users [label="1..*", arrowhead=none];
+  Users -> EBooks [label="1..* (author)", arrowhead=none];
+  Categories -> EBooks [label="1..*", arrowhead=none];
+  Users -> Bookmarks [label="1..*", arrowhead=none];
+  EBooks -> Bookmarks [label="1..*", arrowhead=none];
+  Users -> ReadingHistory [label="1..*", arrowhead=none];
+  EBooks -> ReadingHistory [label="1..*", arrowhead=none];
+  Users -> Feedback [label="1..*", arrowhead=none];
+  EBooks -> Feedback [label="1..*", arrowhead=none];
+}

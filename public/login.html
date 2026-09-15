@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Login - LibraHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --header-bg: #2c3e50;
+      --accent: #3498db;
+      --bg-1: #eef2ff;
+      --bg-2: #f8fafc;
+      --muted: #64748b;
+      --card:#ffffff;
+      --radius:14px;
+      --max-width:920px;
+    }
+    *{box-sizing:border-box}
+
+    /* Sticky header */
+    .site-nav{position:fixed;top:0;left:0;right:0;height:64px;background:var(--header-bg);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:0 2px 8px rgba(0,0,0,0.12);z-index:1000}
+    .site-nav .left{display:flex;align-items:center;gap:12px}
+    .site-nav img.logo-img{height:45px;width:auto;border-radius:6px;transition:transform .18s ease;margin-top:6px;}
+        .site-nav img.logo-img:hover{transform:translateY(2px) scale(1.06)}
+    .site-nav .brand-title{font-weight:700;font-size:16px}
+    .site-nav .badge{background:#fff;color:var(--header-bg);padding:4px 8px;border-radius:8px;font-size:12px;margin-left:8px;font-weight:700}
+    .site-nav nav a{color:#fff;margin-left:18px;text-decoration:none;font-weight:600;transition:color .15s ease,transform .15s ease}
+    .site-nav nav a:hover{color:var(--accent);transform:translateY(-2px)}
+    @media(max-width:720px){.site-nav{padding:0 12px;height:56px}.site-nav .brand-title{font-size:14px}.site-nav nav a{margin-left:12px;font-size:14px}}
+
+    body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;min-height:100vh;background:radial-gradient(1200px 600px at 10% 10%, rgba(52,152,219,0.04), transparent), linear-gradient(180deg,var(--bg-2),var(--bg-1));padding-top:76px}
+
+    .wrap{width:100%;max-width:var(--max-width);display:grid;grid-template-columns:1fr;gap:20px;align-items:center;margin:0 auto;padding:24px}
+    @media(min-width:900px){.wrap{grid-template-columns:520px 1fr}}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+    .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;box-shadow:0 8px 30px rgba(79,70,229,0.12)}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,255,0.99));backdrop-filter: blur(6px);padding:28px;border-radius:var(--radius);box-shadow:0 10px 40px rgba(2,6,23,0.06);width:100%}
+    .hero{padding:28px;border-radius:var(--radius);display:flex;flex-direction:column;gap:14px}
+    h1{margin:0;font-size:22px;color:#0f172a}
+    p.lead{margin:0;color:var(--muted)}
+    form{display:grid;gap:12px;margin-top:8px}
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+    input[type="email"],input[type="password"],select{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #e6edf3;font-size:15px;background:#fff}
+    .row{display:flex;gap:10px}
+    .row .col{flex:1}
+    .actions{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 14px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(15,23,42,0.06);color:#0f172a}
+    .muted{font-size:13px;color:var(--muted)}
+    .footer{margin-top:14px;text-align:center;color:var(--muted)}
+    .illustration{display:none}
+    @media(min-width:900px){
+      .illustration{display:block;background:linear-gradient(180deg,#fbfbff,#f7f8ff);padding:28px;border-radius:var(--radius);height:100%;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6)}
+      .illustration h2{margin:0;font-size:20px}
+      .illustration p{color:var(--muted)}
+      .thumb{width:100%;height:280px;border-radius:10px;background:linear-gradient(135deg, rgba(79,70,229,0.06), rgba(6,182,212,0.04));display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:600}
+    }
+    a{color:var(--accent);text-decoration:none}
+    .socials{display:flex;gap:10px}
+    .socials button{flex:1;padding:10px;border-radius:10px;border:1px solid #e6edf3;background:#fff;cursor:pointer}
+  </style>
+</head>
+<body>
+  <header class="site-nav">
+    <div class="left"><img src="images/logo.png" alt="logo" class="logo-img"><div>
+      <div class="brand-title">LibraHub</div>
+      <div style="font-size:12px;opacity:0.9">Manage, upload and read e-books</div>
+    </div></div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="topic_form.html">Submit Topic</a>
+      <a href="login.html">Login</a>
+      <a href="register.html">Register</a>
+    </nav>
+  </header>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="brand">
+        <a href="index.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit">
+          <div class="logo">EB</div>
+          <div>
+            <div style="font-weight:700">LibraHub</div>
+            <div style="font-size:13px;color:var(--muted)">Manage, upload and read e-books</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="hero">
+        <div>
+          <h1>Welcome back</h1>
+          <p class="lead">Sign in to continue to your library and author tools.</p>
+        </div>
+
+        <form id="loginForm">
+          <div>
+            <label for="email">Email</label>
+            <input id="email" type="email" required placeholder="you@example.com">
+          </div>
+
+          <div>
+            <label for="password">Password</label>
+            <input id="password" type="password" required placeholder="Enter your password">
+          </div>
+
+          <div>
+            <label for="role">Role</label>
+            <select id="role">
+              <option>Reader/Student</option>
+              <option>Librarian</option>
+              <option>Content Manager</option>
+              <option>Author</option>
+              <option>System Administrator</option>
+            </select>
+          </div>
+
+          <div class="actions">
+            <div style="display:flex;align-items:center;gap:10px">
+              <input id="remember" type="checkbox">
+              <label for="remember" style="font-size:13px;color:var(--muted)">Remember me</label>
+            </div>
+            <div><a href="#" class="muted">Forgot password?</a></div>
+          </div>
+
+          <div style="display:flex;gap:12px;flex-direction:column;margin-top:6px">
+            <button class="btn" type="submit">Sign in</button>
+            <button type="button" class="btn ghost" onclick="location.href='register.html'">Create account</button>
+          </div>
+
+          <div style="margin-top:6px">
+            <div class="muted" style="margin-bottom:8px">Or continue with</div>
+            <div class="socials">
+              <button aria-label="Continue with Google">Google</button>
+              <button aria-label="Continue with GitHub">GitHub</button>
+            </div>
+          </div>
+
+          <div class="footer">Don't have an account? <a href="register.html">Register</a></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="illustration">
+      <h2>Discover and share knowledge</h2>
+      <p>Upload topics, manage collections and let readers find your work.</p>
+      <div class="thumb" style="margin-top:18px">Beautiful reading experience</div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      // role is not currently sent to API (backend uses user role stored in DB)
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || 'Login failed');
+        localStorage.setItem('token', data.token);
+        // Save user info if provided
+        if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+        window.location.href = 'topic_form.html';
+      } catch (err) {
+        console.error(err);
+        alert('Network error');
+      }
+    });
+  </script>
+</body>
+</html>

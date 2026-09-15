@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Register - LibraHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--header-bg: #2c3e50;--accent:#3498db;--bg-1:#eef2ff;--bg-2:#f8fafc;--muted:#6b7280;--card:#fff;--radius:14px}
+    *{box-sizing:border-box}
+
+    .site-nav{position:fixed;top:0;left:0;right:0;height:64px;background:var(--header-bg);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:0 2px 8px rgba(0,0,0,0.12);z-index:1000}
+    .site-nav .left{display:flex;align-items:center;gap:12px}
+    .site-nav img.logo-img{height:45px;width:auto;border-radius:6px;transition:transform .18s ease;margin-top:6px}
+        .site-nav img.logo-img:hover{transform:translateY(2px) scale(1.06)}
+    .site-nav .brand-title{font-weight:700;font-size:16px}
+    .site-nav .badge{background:#fff;color:var(--header-bg);padding:4px 8px;border-radius:8px;font-size:12px;margin-left:8px;font-weight:700}
+    .site-nav nav a{color:#fff;margin-left:18px;text-decoration:none;font-weight:600;transition:color .15s ease,transform .15s ease}
+    .site-nav nav a:hover{color:var(--accent);transform:translateY(-2px)}
+    @media(max-width:720px){.site-nav{padding:0 12px;height:56px}.site-nav .brand-title{font-size:14px}.site-nav nav a{margin-left:12px;font-size:14px}}
+
+    body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));min-height:100vh;padding-top:76px}
+
+    .card{width:100%;max-width:720px;background:linear-gradient(180deg,rgba(255,255,255,0.95),#fff);border-radius:var(--radius);box-shadow:0 12px 40px rgba(2,6,23,0.06);display:grid;grid-template-columns:1fr;overflow:hidden;margin:20px auto}
+    @media(min-width:900px){.card{grid-template-columns:420px 1fr}}
+    .left{background:linear-gradient(135deg,var(--accent),#06b6d4);color:#fff;padding:36px;display:flex;flex-direction:column;gap:12px}
+    .logo{width:52px;height:52;border-radius:12px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;font-weight:700}
+    .left h2{margin:0;font-size:20px}
+    .left p{margin:0;opacity:0.95}
+    .right{padding:28px}
+    h1{margin:0 0 6px;font-size:20px;color:#0f172a}
+    .lead{margin:0 0 16px;color:var(--muted)}
+    form{display:grid;gap:12px}
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+    input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #e6edf3;background:#fff;font-size:15px}
+    .row{display:flex;gap:12px}
+    .row .col{flex:1}
+    .btn{padding:12px 14px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+    .muted{color:var(--muted);font-size:13px}
+    .footer{margin-top:8px}
+    a{color:var(--accent);text-decoration:none}
+  </style>
+</head>
+<body>
+  <header class="site-nav">
+    <div class="left"><img src="images/logo.png" alt="logo" class="logo-img"><div>
+      <div class="brand-title">LibraHub</div>
+      <div style="font-size:12px;opacity:0.9">Join and contribute</div>
+    </div></div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="topic_form.html">Submit Topic</a>
+      <a href="login.html">Login</a>
+      <a href="register.html">Register</a>
+    </nav>
+  </header>
+
+  <div class="card">
+    <div class="left">
+      <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:12px">
+        <div class="logo">EB</div>
+        <div>
+          <div style="font-weight:700">LibraHub</div>
+          <div style="font-size:13px;opacity:0.95">Join and contribute</div>
+        </div>
+      </a>
+      <h2 style="margin-top:18px">Join LibraHub</h2>
+      <p>Register to submit topics, manage collections and access reading tools.</p>
+    </div>
+    <div class="right">
+      <h1>Create an account</h1>
+      <div class="lead">Fill your details to get started</div>
+      <form id="regForm">
+        <div>
+          <label for="name">Full Name</label>
+          <input id="name" type="text" required placeholder="Your full name">
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input id="email" type="email" required placeholder="you@example.com">
+        </div>
+        <div>
+          <label for="role">Role</label>
+          <select id="role">
+            <option>Reader/Student</option>
+            <option>Librarian</option>
+            <option>Content Manager</option>
+            <option>Author</option>
+            <option>System Administrator</option>
+          </select>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label for="password">Password</label>
+            <input id="password" type="password" required placeholder="••••••">
+          </div>
+          <div class="col">
+            <label for="confirm">Confirm Password</label>
+            <input id="confirm" type="password" required placeholder="••••••">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;flex-direction:column;margin-top:6px">
+          <button class="btn" type="submit">Create account</button>
+        </div>
+
+        <div class="footer muted">Already have an account? <a href="login.html">Sign in</a></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('regForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm').value;
+      const roleName = document.getElementById('role').value;
+
+      if (password !== confirm) return alert('Passwords do not match');
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password, roleName })
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || 'Registration failed');
+        localStorage.setItem('token', data.token);
+        window.location.href = 'login.html';
+      } catch (err) {
+        console.error(err);
+        alert('Network error');
+      }
+    });
+  </script>
+</body>
+</html>
