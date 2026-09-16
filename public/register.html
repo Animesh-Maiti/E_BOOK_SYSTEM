@@ -5,23 +5,26 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Register - LibraHub</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script>document.documentElement.dataset.theme = localStorage.getItem('librahub-theme') === 'dark' ? 'dark' : 'light';</script>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/ui.css">
+  <link rel="stylesheet" href="css/animations.css">
   <style>
-    :root{--header-bg: #2c3e50;--accent:#3498db;--bg-1:#eef2ff;--bg-2:#f8fafc;--muted:#6b7280;--card:#fff;--radius:14px}
+    :root{--accent:#3498db;--bg-1:#eef2ff;--bg-2:#f8fafc;--muted:#6b7280;--card:#fff;--radius:14px}
     *{box-sizing:border-box}
 
-    .site-nav{position:fixed;top:0;left:0;right:0;height:64px;background:var(--header-bg);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:0 2px 8px rgba(0,0,0,0.12);z-index:1000}
+    .site-nav{position:sticky;top:0;left:0;right:0;height:72px;background:rgba(255,255,255,.92);color:var(--theme-text);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,4vw,48px);border-bottom:1px solid var(--theme-border);box-shadow:var(--theme-shadow);backdrop-filter:blur(16px);z-index:1000}
     .site-nav .left{display:flex;align-items:center;gap:12px}
     .site-nav img.logo-img{height:45px;width:auto;border-radius:6px;transition:transform .18s ease;margin-top:6px}
         .site-nav img.logo-img:hover{transform:translateY(2px) scale(1.06)}
     .site-nav .brand-title{font-weight:700;font-size:16px}
-    .site-nav .badge{background:#fff;color:var(--header-bg);padding:4px 8px;border-radius:8px;font-size:12px;margin-left:8px;font-weight:700}
-    .site-nav nav a{color:#fff;margin-left:18px;text-decoration:none;font-weight:600;transition:color .15s ease,transform .15s ease}
+    .site-nav nav a{color:var(--theme-muted);margin-left:18px;text-decoration:none;font-weight:700;transition:color .15s ease,transform .15s ease}
     .site-nav nav a:hover{color:var(--accent);transform:translateY(-2px)}
-    @media(max-width:720px){.site-nav{padding:0 12px;height:56px}.site-nav .brand-title{font-size:14px}.site-nav nav a{margin-left:12px;font-size:14px}}
+    @media(max-width:720px){.site-nav{height:auto;min-height:66px;flex-wrap:wrap;padding:10px 14px}.site-nav .brand-title{font-size:14px}.site-nav nav{order:3;width:100%;display:flex;justify-content:space-between;gap:8px}.site-nav nav a{margin-left:0;font-size:12px}}
 
-    body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));min-height:100vh;padding-top:76px}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;background:var(--theme-bg);min-height:100vh;padding-top:0}
 
-    .card{width:100%;max-width:720px;background:linear-gradient(180deg,rgba(255,255,255,0.95),#fff);border-radius:var(--radius);box-shadow:0 12px 40px rgba(2,6,23,0.06);display:grid;grid-template-columns:1fr;overflow:hidden;margin:20px auto}
+    .card{width:min(920px,calc(100% - 40px));max-width:920px;background:var(--theme-surface);border:1px solid var(--theme-border);border-radius:22px;box-shadow:var(--theme-shadow);display:grid;grid-template-columns:1fr;overflow:hidden;margin:36px auto 70px}
     @media(min-width:900px){.card{grid-template-columns:420px 1fr}}
     .left{background:linear-gradient(135deg,var(--accent),#06b6d4);color:#fff;padding:36px;display:flex;flex-direction:column;gap:12px}
     .logo{width:52px;height:52;border-radius:12px;background:rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;font-weight:700}
@@ -41,18 +44,16 @@
     a{color:var(--accent);text-decoration:none}
   </style>
 </head>
-<body>
+<body class="legacy-auth">
   <header class="site-nav">
-    <div class="left"><img src="images/logo.png" alt="logo" class="logo-img"><div>
-      <div class="brand-title">LibraHub</div>
-      <div style="font-size:12px;opacity:0.9">Join and contribute</div>
-    </div></div>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="topic_form.html">Submit Topic</a>
-      <a href="login.html">Login</a>
-      <a href="register.html">Register</a>
-    </nav>
+    <div class="container nav-inner">
+      <a class="brand" href="index.html"><img src="images/logo.png" alt="LibraHub logo"><span class="brand-name">LibraHub</span></a>
+      <button class="nav-button" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Open navigation">☰</button>
+      <nav class="nav-links" id="navLinks" aria-label="Primary navigation">
+        <a href="index.html">Home</a><a href="library.html">Library</a><a href="dashboard.html">Dashboard</a><a href="topic_form.html">Submit a book</a>
+      </nav>
+      <div class="nav-actions"><a class="button small" href="login.html">Log in</a><a class="button small" href="register.html">Get started</a></div>
+    </div>
   </header>
 
   <div class="card">
@@ -83,10 +84,7 @@
           <label for="role">Role</label>
           <select id="role">
             <option>Reader/Student</option>
-            <option>Librarian</option>
-            <option>Content Manager</option>
             <option>Author</option>
-            <option>System Administrator</option>
           </select>
         </div>
         <div class="row">
@@ -109,6 +107,8 @@
     </div>
   </div>
 
+  <script src="js/theme.js"></script>
+  <script src="js/animations.js"></script>
   <script>
     const form = document.getElementById('regForm');
     form.addEventListener('submit', async (e) => {

@@ -1,0 +1,210 @@
+/* Shared motion primitives. Components opt in through data-reveal or known page selectors. */
+:root {
+  --motion-fast: 180ms;
+  --motion-base: 280ms;
+  --motion-slow: 520ms;
+  --motion-ease: cubic-bezier(.22, .8, .24, 1);
+}
+
+html.page-enter,
+html.page-enter body {
+  overflow-x: hidden;
+}
+
+body {
+  animation: page-enter var(--motion-base) var(--motion-ease) both;
+}
+
+body.page-leaving {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0) scale(.985);
+  transition: opacity var(--motion-slow) var(--motion-ease),
+    transform var(--motion-slow) var(--motion-ease);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+[data-reveal-stagger] > [data-reveal] {
+  --reveal-delay: calc(var(--reveal-index, 0) * 70ms);
+}
+
+.site-nav {
+  transition: box-shadow var(--motion-base) ease, background-color var(--motion-base) ease,
+    border-color var(--motion-base) ease, backdrop-filter var(--motion-base) ease;
+}
+
+.site-nav.is-scrolled {
+  box-shadow: 0 12px 32px rgba(20, 33, 61, .12);
+  background-color: rgba(255, 255, 255, .96);
+}
+
+[data-theme="dark"] .site-nav.is-scrolled {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .3);
+  background-color: rgba(11, 17, 32, .97) !important;
+}
+
+.button,
+.btn,
+button:not(.theme-toggle) {
+  transition: transform var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) ease, background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+
+.button:hover,
+.btn:hover,
+button:not(.theme-toggle):hover {
+  transform: translateY(-2px);
+}
+
+.button:active,
+.btn:active,
+button:not(.theme-toggle):active {
+  transform: translateY(0) scale(.98);
+}
+
+.button,
+.btn,
+button {
+  position: relative;
+  overflow: hidden;
+}
+
+.motion-ripple {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: currentColor;
+  opacity: .18;
+  transform: translate(-50%, -50%) scale(0);
+  animation: ripple 480ms ease-out forwards;
+}
+
+a:not(.button):not(.theme-toggle) {
+  transition: color var(--motion-fast) ease, opacity var(--motion-fast) ease;
+}
+
+input,
+select,
+textarea {
+  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease,
+    background-color var(--motion-fast) ease, transform var(--motion-fast) ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  transform: translateY(-1px);
+  border-color: var(--theme-accent, #315efb) !important;
+  box-shadow: 0 0 0 4px rgba(49, 94, 251, .13);
+}
+
+.book-card,
+.feature-card,
+.step,
+.grid article,
+.card,
+.form-card,
+.sidebar,
+.illustration {
+  will-change: transform;
+}
+
+.book-card:hover,
+.feature-card:hover,
+.step:hover,
+.grid article:hover {
+  transition: transform var(--motion-base) var(--motion-ease),
+    box-shadow var(--motion-base) ease, border-color var(--motion-base) ease;
+}
+
+.book-cover img {
+  transition: transform 420ms var(--motion-ease);
+}
+
+.book-card:hover .book-cover img {
+  transform: scale(1.045);
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.skeleton {
+  min-height: 150px;
+  border-radius: 14px;
+  background: linear-gradient(105deg, var(--theme-elevated, #f8fafc) 30%, rgba(148, 163, 184, .22) 50%, var(--theme-elevated, #f8fafc) 70%);
+  background-size: 220% 100%;
+  animation: skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+.empty-state {
+  animation: empty-state-in var(--motion-base) var(--motion-ease) both;
+}
+
+.bookmark-pop {
+  animation: bookmark-pop 360ms var(--motion-ease);
+}
+
+.is-removing {
+  opacity: 0 !important;
+  transform: translate3d(0, 10px, 0) scale(.97) !important;
+  transition: opacity 220ms ease, transform 220ms ease !important;
+  pointer-events: none;
+}
+
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes ripple {
+  to { opacity: 0; transform: translate(-50%, -50%) scale(18); }
+}
+
+@keyframes skeleton-shimmer {
+  to { background-position: -120% 0; }
+}
+
+@keyframes empty-state-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes bookmark-pop {
+  50% { transform: scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .motion-ripple {
+    display: none;
+  }
+}

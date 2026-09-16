@@ -1,53 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
-const { submitBook, getCategories, getBooks } = require('../controllers/bookController');
+const {
+  submitBook, getCategories, getBooks, getBook, getPendingBooks, getOwnBooks, reviewBook, readBook, downloadBook, updateBook, deleteBook,
+} = require('../controllers/bookController');
 const auth = require('../middlewares/authMiddleware');
-
-const uploadDir = process.env.UPLOAD_DIR || 'uploads';
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, unique + path.extname(file.originalname));
-  }
-});
-// Multer with file size limit and basic file filter
-const upload = multer({ 
-  storage,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
-  fileFilter: function (req, file, cb) {
-    const allowed = ['application/pdf', 'application/epub+zip'];
-    if (allowed.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only PDF and ePub are allowed.'), false);
-    }
-  }
-});
+const { uploadBook } = require('../middlewares/uploadMiddleware');
+const { asyncHandler } = require('../utils/helpers');
+const requireRoles = require('../middlewares/roleMiddleware');
 
 // Category list
-router.get('/categories', getCategories);
+router.get('/categories', asyncHandler(getCategories));
+router.get('/moderation/pending', auth, requireRoles('Librarian', 'Content Manager', 'System Administrator'), asyncHandler(getPendingBooks));
+router.get('/mine', auth, requireRoles('Author', 'Content Manager', 'Librarian', 'System Administrator'), asyncHandler(getOwnBooks));
+router.get('/:id/read', auth, asyncHandler(readBook));
+router.get('/:id/download', auth, asyncHandler(downloadBook));
+router.patch('/:id/review', auth, requireRoles('Librarian', 'Content Manager', 'System Administrator'), asyncHandler(reviewBook));
+router.post('/submit', auth, requireRoles('Author', 'Content Manager', 'Librarian', 'System Administrator'), uploadBook.single('file'), asyncHandler(submitBook));
+router.put('/:id', auth, uploadBook.single('file'), asyncHandler(updateBook));
+router.delete('/:id', auth, asyncHandler(deleteBook));
 
 // Get all books
-router.get('/', getBooks);
-
-// Submit a book/topic (protected)
-router.post('/submit', auth, function (req, res, next) {
-  // Wrap multer single call to capture multer errors and surface them as JSON
-  const handler = upload.single('file');
-  handler(req, res, function (err) {
-    if (err) {
-      console.error('Multer error:', err);
-      // Multer threw an error (file too large or invalid type)
-      return res.status(400).json({ message: err.message || 'File upload error' });
-    }
-    // proceed to controller
-    return submitBook(req, res, next);
-  });
-});
+router.get('/', asyncHandler(getBooks));
+router.get('/:id', asyncHandler(getBook));
 
 module.exports = router;

@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Manage your LibraHub bookmarks and reading history.">
+  <title>My Dashboard - LibraHub</title>
+  <script>document.documentElement.dataset.theme = localStorage.getItem('librahub-theme') === 'dark' ? 'dark' : 'light';</script>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/ui.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--theme-bg);
+      color: var(--theme-text);
+      font-family: "DM Sans", system-ui, sans-serif;
+    }
+
+    .dashboard-main {
+      width: min(1160px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 42px 0 76px;
+    }
+
+    .dashboard-hero {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 28px;
+      padding: clamp(28px, 5vw, 52px);
+      border: 1px solid var(--theme-border);
+      border-radius: 28px;
+      background: linear-gradient(130deg, #f3f6ff, #fff 62%, #fff8ef);
+      box-shadow: var(--theme-shadow);
+    }
+
+    [data-theme="dark"] .dashboard-hero {
+      background: linear-gradient(130deg, #111b33, #172033 65%, #202b40);
+    }
+
+    .dashboard-kicker {
+      margin: 0 0 10px;
+      color: var(--theme-accent);
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .dashboard-hero h1 {
+      margin: 0;
+      color: var(--theme-text);
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: clamp(2.45rem, 5vw, 4.3rem);
+      letter-spacing: -.055em;
+      line-height: 1.04;
+    }
+
+    .dashboard-subtitle {
+      max-width: 570px;
+      margin: 14px 0 0;
+      color: var(--theme-muted);
+      font-size: 1.02rem;
+    }
+
+    .profile-card {
+      min-width: 240px;
+      padding: 17px;
+      border: 1px solid var(--theme-border);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, .55);
+    }
+
+    [data-theme="dark"] .profile-card { background: rgba(30, 41, 59, .55); }
+    .profile-name { color: var(--theme-text); font-weight: 800; }
+    .profile-detail { margin: 4px 0 0; color: var(--theme-muted); font-size: .84rem; overflow-wrap: anywhere; }
+    .profile-role { display: inline-flex; margin-top: 12px; padding: 5px 9px; border-radius: 999px; background: var(--theme-elevated); color: var(--theme-accent); font-size: .73rem; font-weight: 800; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin: 24px 0 34px;
+    }
+
+    .stat-card {
+      padding: 20px;
+      border: 1px solid var(--theme-border);
+      border-radius: 16px;
+      background: var(--theme-surface);
+      box-shadow: var(--theme-shadow);
+    }
+
+    .stat-label { color: var(--theme-muted); font-size: .78rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+    .stat-value { display: block; margin-top: 7px; color: var(--theme-text); font-family: "Playfair Display", Georgia, serif; font-size: 2.25rem; line-height: 1; }
+    .stat-note { display: block; margin-top: 8px; color: var(--theme-muted); font-size: .8rem; }
+
+    .dashboard-section {
+      margin-top: 28px;
+      padding: clamp(20px, 4vw, 30px);
+      border: 1px solid var(--theme-border);
+      border-radius: 20px;
+      background: var(--theme-surface);
+      box-shadow: var(--theme-shadow);
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      color: var(--theme-text);
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: clamp(1.7rem, 3vw, 2.35rem);
+      letter-spacing: -.04em;
+    }
+
+    .section-heading p { margin: 5px 0 0; color: var(--theme-muted); }
+    .section-action { white-space: nowrap; }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .dashboard-book {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--theme-border);
+      border-radius: 16px;
+      background: var(--theme-bg);
+      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+    }
+
+    .dashboard-book:hover {
+      border-color: rgba(49, 94, 251, .42);
+      box-shadow: var(--theme-shadow);
+      transform: translateY(-4px);
+    }
+
+    .dashboard-cover {
+      display: grid;
+      min-height: 150px;
+      place-items: center;
+      padding: 18px;
+      background: linear-gradient(135deg, #eaf1ff, #f8f1e8);
+      color: #31518d;
+    }
+
+    [data-theme="dark"] .dashboard-cover { background: linear-gradient(135deg, #26365c, #283141); color: #dbe5ff; }
+    .dashboard-cover img { width: 100%; height: 150px; border-radius: 9px; object-fit: cover; }
+    .cover-fallback { max-width: 160px; font-family: "Playfair Display", Georgia, serif; font-size: 1.45rem; line-height: 1.05; text-align: center; }
+    .dashboard-book-body { display: flex; flex: 1; flex-direction: column; padding: 16px; }
+    .dashboard-book-title { color: var(--theme-text); font-weight: 800; line-height: 1.25; text-decoration: none; }
+    .dashboard-book-title:hover { color: var(--theme-accent); }
+    .dashboard-book-author { margin: 6px 0 0; color: var(--theme-muted); font-size: .83rem; }
+    .dashboard-book-meta { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 11px; color: var(--theme-muted); font-size: .76rem; }
+    .dashboard-rating { color: #d88a16; font-weight: 800; }
+    .progress-track { height: 7px; margin-top: 15px; overflow: hidden; border-radius: 999px; background: var(--theme-elevated); }
+    .progress-bar { height: 100%; border-radius: inherit; background: var(--theme-accent); }
+    .progress-label { margin: 6px 0 0; color: var(--theme-muted); font-size: .74rem; }
+    .dashboard-book-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 16px; }
+    .dashboard-book-actions .button,
+    .dashboard-book-actions button { min-height: 36px; padding: 0 10px; border-radius: 9px; font-size: .76rem; }
+    .remove-button { border: 1px solid var(--theme-border); background: transparent; color: var(--theme-text); cursor: pointer; }
+
+    .empty-dashboard {
+      grid-column: 1 / -1;
+      padding: 42px 18px;
+      border: 1px dashed var(--theme-border);
+      border-radius: 14px;
+      background: var(--theme-elevated);
+      text-align: center;
+    }
+
+    .empty-icon { font-size: 2.2rem; }
+    .empty-dashboard h3 { margin: 10px 0 6px; color: var(--theme-text); }
+    .empty-dashboard p { max-width: 420px; margin: 0 auto 17px; color: var(--theme-muted); }
+    .dashboard-message { min-height: 22px; margin: 18px 0 0; color: #c24141; }
+
+    @media (max-width: 900px) {
+      .dashboard-hero { align-items: start; flex-direction: column; }
+      .profile-card { width: 100%; }
+      .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 600px) {
+      .dashboard-main { width: min(100% - 28px, 560px); padding-top: 24px; }
+      .stats-grid, .dashboard-grid { grid-template-columns: 1fr; }
+      .section-heading { align-items: start; flex-direction: column; }
+      .section-action { width: 100%; }
+      .section-action.button { text-align: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .dashboard-book { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="dashboard-main">
+    <section class="dashboard-hero" data-reveal>
+      <div>
+        <p class="dashboard-kicker">Your reading space</p>
+        <h1>Welcome back<span id="welcomeName"></span>.</h1>
+        <p class="dashboard-subtitle">Keep your favorite discoveries close and continue reading whenever inspiration returns.</p>
+      </div>
+      <div id="profileCard" class="profile-card">
+        <div class="profile-name">Signed-in reader</div>
+        <p class="profile-detail">Loading your profile…</p>
+      </div>
+    </section>
+
+    <section class="stats-grid" aria-label="Library summary" data-reveal-stagger>
+      <article class="stat-card" data-reveal><span class="stat-label">Bookmarks</span><strong id="bookmarkCount" class="stat-value">—</strong><span class="stat-note">Books saved for later</span></article>
+      <article class="stat-card" data-reveal><span class="stat-label">Reading history</span><strong id="historyCount" class="stat-value">—</strong><span class="stat-note">Books you have opened</span></article>
+    </section>
+
+    <section class="dashboard-section" data-reveal>
+      <div class="section-heading">
+        <div><h2>Saved for later</h2><p>Your bookmarked books in one place.</p></div>
+        <a class="button section-action" href="library.html">Browse library</a>
+      </div>
+      <div id="bookmarks" class="dashboard-grid"></div>
+    </section>
+
+    <section class="dashboard-section" data-reveal>
+      <div class="section-heading">
+        <div><h2>Continue reading</h2><p>Pick up where you left off.</p></div>
+        <button id="clearHistory" class="button secondary section-action" type="button">Clear history</button>
+      </div>
+      <div id="history" class="dashboard-grid"></div>
+    </section>
+    <p id="message" class="dashboard-message" role="status"></p>
+  </main>
+
+  <script src="js/theme.js"></script>
+  <script src="js/animations.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    let user = null;
+    try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch { user = null; }
+    const $ = id => document.getElementById(id);
+    const element = (tag, text, className) => {
+      const node = document.createElement(tag);
+      if (text !== undefined) node.textContent = text;
+      if (className) node.className = className;
+      return node;
+    };
+    const headers = () => token ? { Authorization: 'Bearer ' + token } : {};
+
+    function updateNavigation() {
+      const signIn = document.querySelector('.compact-actions a[href="login.html"]');
+      if (!signIn || !token) return;
+      signIn.textContent = 'Sign out';
+      signIn.href = '#';
+      signIn.addEventListener('click', event => {
+        event.preventDefault();
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        location.href = 'index.html';
+      });
+    }
+
+    async function request(url, options = {}) {
+      const response = await fetch(url, { ...options, headers: { ...headers(), ...(options.headers || {}) } });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.message || 'Request failed');
+      return payload;
+    }
+
+    function showEmpty(container, title, message, linkText, linkHref) {
+      const empty = element('div', undefined, 'empty-dashboard');
+      empty.append(element('div', '✦', 'empty-icon'), element('h3', title), element('p', message));
+      if (linkText) {
+        const link = element('a', linkText, 'button');
+        link.href = linkHref;
+        empty.append(link);
+      }
+      container.replaceChildren(empty);
+    }
+
+    function renderBook(item, type) {
+      const book = item.book || item;
+      const article = element('article', undefined, 'dashboard-book');
+      const cover = element('div', undefined, 'dashboard-cover');
+      if (book.cover_image) {
+        const image = document.createElement('img');
+        image.src = book.cover_image;
+        image.alt = `${book.title || 'Book'} cover`;
+        cover.append(image);
+      } else {
+        cover.append(element('div', book.title || 'LibraHub', 'cover-fallback'));
+      }
+      const body = element('div', undefined, 'dashboard-book-body');
+      const title = element('a', book.title || 'Untitled book', 'dashboard-book-title');
+      title.href = `book.html?id=${encodeURIComponent(book._id)}`;
+      const author = element('p', `By ${book.author?.name || 'Unknown author'}`, 'dashboard-book-author');
+      const meta = element('div', undefined, 'dashboard-book-meta');
+      meta.append(element('span', book.category?.category_name || 'General'));
+      if (book.rating_summary) meta.append(element('span', `★ ${book.rating_summary.average || 0}`, 'dashboard-rating'));
+      body.append(title, author, meta);
+
+      if (type === 'history') {
+        const progress = Math.max(0, Math.min(100, Number(item.progress) || 0));
+        const track = element('div', undefined, 'progress-track');
+        const bar = element('div', undefined, 'progress-bar');
+        bar.style.width = `${progress}%`;
+        track.append(bar);
+        body.append(track, element('p', `Last read ${item.last_accessed ? new Date(item.last_accessed).toLocaleString() : 'recently'} · ${progress}% complete`, 'progress-label'));
+      }
+
+      const actions = element('div', undefined, 'dashboard-book-actions');
+      const view = element('a', type === 'history' ? 'Continue reading' : 'View details', 'button');
+      view.href = title.href;
+      const remove = element('button', type === 'history' ? 'Remove history' : 'Remove bookmark', 'remove-button');
+      remove.type = 'button';
+      remove.addEventListener('click', async () => {
+        if (remove.disabled) return;
+        remove.disabled = true;
+        try {
+          await request(type === 'history' ? `/api/history/${book._id}` : `/api/bookmarks/${book._id}`, { method: 'DELETE' });
+          article.classList.add('is-removing');
+          window.setTimeout(() => {
+            article.remove();
+            updateCounts();
+          }, 230);
+        } catch (error) {
+          remove.disabled = false;
+          $('message').textContent = error.message;
+        }
+      });
+      actions.append(view, remove);
+      body.append(actions);
+      article.append(cover, body);
+      return article;
+    }
+
+    function updateCounts() {
+      $('bookmarkCount').textContent = $('bookmarks').querySelectorAll('.dashboard-book').length;
+      $('historyCount').textContent = $('history').querySelectorAll('.dashboard-book').length;
+    }
+
+    function renderProfile() {
+      const name = user?.name || 'Reader';
+      $('welcomeName').textContent = `, ${name}`;
+      const profile = $('profileCard');
+      profile.replaceChildren(
+        element('div', name, 'profile-name'),
+        element('p', user?.email || 'Your personal reading dashboard', 'profile-detail'),
+        element('span', user?.role || 'Reader', 'profile-role'),
+      );
+    }
+
+    async function load() {
+      if (!token) {
+        renderProfile();
+        $('message').textContent = 'Please log in to view your dashboard.';
+        $('bookmarkCount').textContent = '0';
+        $('historyCount').textContent = '0';
+        showEmpty($('bookmarks'), 'Your bookmarks are waiting', 'Sign in to save books you want to return to.', 'Go to login', 'login.html');
+        showEmpty($('history'), 'No reading history yet', 'Open an approved book and it will appear here.', 'Explore library', 'library.html');
+        $('clearHistory').disabled = true;
+        return;
+      }
+      renderProfile();
+      $('message').textContent = 'Loading your library…';
+      try {
+        const [bookmarks, history] = await Promise.all([request('/api/bookmarks'), request('/api/history')]);
+        const bookmarkItems = (bookmarks.data || []).filter(item => item.book);
+        const historyItems = (history.data || []).filter(item => item.book);
+        if (bookmarkItems.length) $('bookmarks').replaceChildren(...bookmarkItems.map(item => renderBook(item, 'bookmark')));
+        else showEmpty($('bookmarks'), 'No bookmarks yet', 'Save books from the catalogue to build your personal shelf.', 'Browse library', 'library.html');
+        if (historyItems.length) $('history').replaceChildren(...historyItems.map(item => renderBook(item, 'history')));
+        else showEmpty($('history'), 'No reading history yet', 'Your recently opened books will appear here.', 'Explore library', 'library.html');
+        updateCounts();
+        $('message').textContent = '';
+      } catch (error) {
+        $('message').textContent = error.message;
+        $('bookmarkCount').textContent = '—';
+        $('historyCount').textContent = '—';
+      }
+    }
+
+    $('clearHistory').addEventListener('click', async () => {
+      if (!token || $('clearHistory').disabled) return;
+      if (!confirm('Clear your entire reading history?')) return;
+      $('clearHistory').disabled = true;
+      $('clearHistory').textContent = 'Clearing…';
+      try {
+        await request('/api/history', { method: 'DELETE' });
+        showEmpty($('history'), 'No reading history yet', 'Your recently opened books will appear here.', 'Explore library', 'library.html');
+        updateCounts();
+      } catch (error) {
+        $('message').textContent = error.message;
+      } finally {
+        $('clearHistory').disabled = false;
+        $('clearHistory').textContent = 'Clear history';
+      }
+    });
+
+    updateNavigation();
+    load();
+  </script>
+</body>
+</html>

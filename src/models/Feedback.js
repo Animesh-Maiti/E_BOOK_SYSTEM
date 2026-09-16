@@ -7,4 +7,6 @@ const FeedbackSchema = new mongoose.Schema({
   comment: { type: String },
 }, { timestamps: true });
 
+FeedbackSchema.index({ reader: 1, book: 1 }, { unique: true });
+
 module.exports = mongoose.model('Feedback', FeedbackSchema);
