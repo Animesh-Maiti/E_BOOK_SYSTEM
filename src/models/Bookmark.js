@@ -5,4 +5,6 @@ const BookmarkSchema = new mongoose.Schema({
   book: { type: mongoose.Schema.Types.ObjectId, ref: 'Book', required: true },
 }, { timestamps: { createdAt: 'created_at' } });
 
+BookmarkSchema.index({ user: 1, book: 1 }, { unique: true });
+
 module.exports = mongoose.model('Bookmark', BookmarkSchema);

@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Explore approved ebooks in the LibraHub digital library.">
+  <title>Explore the Library - LibraHub</title>
+  <script>document.documentElement.dataset.theme = localStorage.getItem('librahub-theme') === 'dark' ? 'dark' : 'light';</script>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/ui.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    :root {
+      --library-ink: #172033;
+      --library-muted: #64748b;
+      --library-blue: #315efb;
+      --library-soft: #eef3ff;
+      --library-line: #e5eaf2;
+      --library-radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--theme-bg);
+      color: var(--theme-text);
+      font-family: "DM Sans", system-ui, sans-serif;
+    }
+
+    .library-main {
+      width: min(1160px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 44px 0 70px;
+    }
+
+    .library-hero {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      min-height: 270px;
+      padding: clamp(30px, 6vw, 66px);
+      border: 1px solid var(--theme-border);
+      border-radius: 28px;
+      background: linear-gradient(130deg, #f4f7ff 0%, #fff 60%, #fff8ef 100%);
+      box-shadow: var(--theme-shadow);
+    }
+
+    .library-hero::before,
+    .library-hero::after {
+      position: absolute;
+      z-index: -1;
+      border-radius: 50%;
+      content: "";
+      pointer-events: none;
+    }
+
+    .library-hero::before {
+      width: 300px;
+      height: 300px;
+      top: -170px;
+      right: -40px;
+      background: rgba(49, 94, 251, .12);
+    }
+
+    .library-hero::after {
+      width: 180px;
+      height: 180px;
+      right: 24%;
+      bottom: -120px;
+      background: rgba(245, 183, 86, .14);
+    }
+
+    [data-theme="dark"] .library-hero {
+      background: linear-gradient(130deg, #111b33 0%, #172033 62%, #202b40 100%);
+    }
+
+    .library-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--library-blue);
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .library-eyebrow::before {
+      width: 26px;
+      height: 2px;
+      background: currentColor;
+      content: "";
+    }
+
+    .library-hero h1 {
+      max-width: 660px;
+      margin: 12px 0 12px;
+      color: var(--theme-text);
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: clamp(2.5rem, 6vw, 4.7rem);
+      letter-spacing: -.055em;
+      line-height: 1.02;
+    }
+
+    .library-hero p {
+      max-width: 600px;
+      margin: 0;
+      color: var(--theme-muted);
+      font-size: 1.06rem;
+    }
+
+    .catalogue-panel {
+      margin-top: 26px;
+      padding: clamp(16px, 3vw, 24px);
+      border: 1px solid var(--theme-border);
+      border-radius: var(--library-radius);
+      background: var(--theme-surface);
+      box-shadow: var(--theme-shadow);
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+    }
+
+    .search-control {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-control svg {
+      position: absolute;
+      left: 15px;
+      width: 20px;
+      height: 20px;
+      color: var(--theme-muted);
+      pointer-events: none;
+    }
+
+    .search-control input {
+      width: 100%;
+      min-height: 50px;
+      padding: 0 48px;
+      border: 1px solid var(--theme-border);
+      border-radius: 13px;
+      background: var(--theme-input);
+      color: var(--theme-text);
+      outline: 0;
+    }
+
+    .search-control input:focus {
+      border-color: var(--theme-accent);
+      box-shadow: 0 0 0 4px rgba(49, 94, 251, .13);
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 10px;
+      display: none;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--theme-muted);
+      cursor: pointer;
+    }
+
+    .clear-search.is-visible { display: grid; place-items: center; }
+    .clear-search:hover { background: var(--theme-elevated); color: var(--theme-text); }
+
+    .search-button {
+      min-height: 50px;
+      padding: 0 22px;
+      border: 0;
+      border-radius: 13px;
+      background: var(--theme-accent);
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .filter-grid label {
+      display: grid;
+      gap: 6px;
+      color: var(--theme-muted);
+      font-size: .73rem;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .filter-grid input,
+    .filter-grid select {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 11px;
+      border: 1px solid var(--theme-border);
+      border-radius: 10px;
+      background: var(--theme-input);
+      color: var(--theme-text);
+    }
+
+    .filter-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .filter-hint { margin: 0; color: var(--theme-muted); font-size: .82rem; }
+    .clear-filters {
+      padding: 8px 12px;
+      border: 1px solid var(--theme-border);
+      border-radius: 9px;
+      background: transparent;
+      color: var(--theme-text);
+      cursor: pointer;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin: 42px 0 18px;
+    }
+
+    .results-header h2 {
+      margin: 0 0 5px;
+      color: var(--theme-text);
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      letter-spacing: -.04em;
+    }
+
+    .results-summary { margin: 0; color: var(--theme-muted); }
+    .results-state { min-height: 22px; margin: 0; color: var(--theme-muted); }
+
+    .book-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .library-card {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--theme-border);
+      border-radius: var(--library-radius);
+      background: var(--theme-surface);
+      box-shadow: var(--theme-shadow);
+      color: var(--theme-text);
+      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+    }
+
+    .library-card:hover {
+      border-color: rgba(49, 94, 251, .45);
+      box-shadow: 0 20px 44px rgba(20, 33, 61, .14);
+      transform: translateY(-5px);
+    }
+
+    .cover-area {
+      position: relative;
+      display: grid;
+      min-height: 190px;
+      place-items: center;
+      padding: 22px;
+      background: linear-gradient(135deg, #eaf1ff, #f8f2ea);
+      color: #31518d;
+    }
+
+    [data-theme="dark"] .cover-area {
+      background: linear-gradient(135deg, #26365c, #263040);
+      color: #dbe5ff;
+    }
+
+    .cover-area img {
+      width: 100%;
+      height: 190px;
+      object-fit: cover;
+      border-radius: 10px;
+      transition: transform .4s ease;
+    }
+
+    .library-card:hover .cover-area img { transform: scale(1.04); }
+    .cover-placeholder {
+      max-width: 190px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 1.55rem;
+      line-height: 1.05;
+      text-align: center;
+    }
+
+    .bookmark-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .9);
+      color: #315efb;
+      font-size: .72rem;
+      font-weight: 800;
+    }
+
+    .card-content {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      padding: 19px;
+    }
+
+    .card-category {
+      margin-bottom: 8px;
+      color: var(--theme-accent);
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .card-content h3 {
+      margin: 0;
+      font-size: 1.18rem;
+      line-height: 1.2;
+    }
+
+    .card-content h3 a {
+      color: var(--theme-text);
+      text-decoration: none;
+    }
+
+    .card-content h3 a:hover { color: var(--theme-accent); }
+    .card-author { margin: 7px 0 0; color: var(--theme-muted); font-size: .87rem; }
+    .card-description {
+      display: -webkit-box;
+      overflow: hidden;
+      margin: 14px 0;
+      color: var(--theme-muted);
+      font-size: .88rem;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+    }
+
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      margin-top: auto;
+      padding-top: 12px;
+      color: var(--theme-muted);
+      font-size: .78rem;
+    }
+
+    .rating { color: #d88a16; font-weight: 800; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; }
+    .card-date { color: var(--theme-muted); font-size: .76rem; }
+    .details-button { padding: 9px 12px; border-radius: 9px; font-size: .8rem; }
+
+    .empty-library {
+      grid-column: 1 / -1;
+      padding: 54px 20px;
+      border: 1px dashed var(--theme-border);
+      border-radius: var(--library-radius);
+      background: var(--theme-elevated);
+      text-align: center;
+    }
+
+    .empty-library-icon { font-size: 2.4rem; }
+    .empty-library h3 { margin: 12px 0 7px; color: var(--theme-text); }
+    .empty-library p { margin: 0 auto 18px; max-width: 420px; color: var(--theme-muted); }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 34px;
+    }
+
+    .page-button {
+      min-width: 38px;
+      min-height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--theme-border);
+      border-radius: 10px;
+      background: var(--theme-surface);
+      color: var(--theme-text);
+      cursor: pointer;
+    }
+
+    .page-button.current {
+      border-color: var(--theme-accent);
+      background: var(--theme-accent);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .page-button:disabled { cursor: not-allowed; opacity: .45; }
+
+    @media (max-width: 920px) {
+      .filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .book-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 620px) {
+      .library-main { width: min(100% - 28px, 560px); padding-top: 24px; }
+      .library-hero { border-radius: 20px; }
+      .search-row { grid-template-columns: 1fr; }
+      .filter-grid { grid-template-columns: 1fr 1fr; }
+      .filter-actions { align-items: stretch; flex-direction: column; }
+      .filter-hint { text-align: center; }
+      .clear-filters { width: 100%; }
+      .results-header { align-items: start; flex-direction: column; margin-top: 32px; }
+      .book-grid { grid-template-columns: 1fr; }
+      .pagination { flex-wrap: wrap; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .library-card,
+      .cover-area img { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="library-main">
+    <section class="library-hero" data-reveal>
+      <div class="library-eyebrow">The LibraHub catalogue</div>
+      <h1>Explore the Library</h1>
+      <p>Find your next thoughtful read from a growing collection of approved ebooks, organised for curious minds.</p>
+    </section>
+
+    <section class="catalogue-panel" data-reveal aria-label="Search and filter the library">
+      <form id="filters">
+        <div class="search-row">
+          <div class="search-control">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+            <input id="search" type="search" autocomplete="off" placeholder="Search by title, author, publisher, or keyword" aria-label="Search the library">
+            <button id="clearSearch" class="clear-search" type="button" aria-label="Clear search">×</button>
+          </div>
+          <button class="search-button" type="submit">Search library</button>
+        </div>
+        <div class="filter-grid">
+          <label>Category<select id="category"><option value="">All categories</option></select></label>
+          <label>Author ID<input id="author" type="text" placeholder="Optional"></label>
+          <label>Publication year<input id="year" type="number" min="1000" max="9999" placeholder="Any year"></label>
+          <label>Minimum rating<select id="minRating"><option value="">Any rating</option><option value="4">4+ stars</option><option value="3">3+ stars</option><option value="2">2+ stars</option><option value="1">1+ star</option></select></label>
+          <label>Sort by<select id="sort"><option value="">Newest</option><option value="title">Title</option><option value="oldest">Oldest</option></select></label>
+        </div>
+        <div class="filter-actions">
+          <p id="filterHint" class="filter-hint">Browse the complete approved catalogue.</p>
+          <button id="clearFilters" class="clear-filters" type="button">Clear filters</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="results-section" aria-labelledby="resultsHeading">
+      <div class="results-header">
+        <div>
+          <h2 id="resultsHeading">Browse all books</h2>
+          <p id="resultsSummary" class="results-summary">Discover something worth returning to.</p>
+        </div>
+        <p id="message" class="results-state" aria-live="polite"></p>
+      </div>
+      <div id="books" class="book-grid" aria-live="polite"></div>
+      <nav id="pagination" class="pagination" aria-label="Library pages"></nav>
+    </section>
+  </main>
+
+  <script src="js/theme.js"></script>
+  <script src="js/animations.js"></script>
+  <script>
+    const state = { page: 1, pages: 1, total: 0 };
+    const $ = id => document.getElementById(id);
+    const token = () => localStorage.getItem('token');
+
+    function makeElement(tag, text, className) {
+      const element = document.createElement(tag);
+      if (text !== undefined) element.textContent = text;
+      if (className) element.className = className;
+      return element;
+    }
+
+    function showSkeleton() {
+      const skeletonGrid = makeElement('div', undefined, 'skeleton-grid');
+      skeletonGrid.setAttribute('aria-label', 'Loading books');
+      for (let index = 0; index < 6; index += 1) skeletonGrid.append(makeElement('div', undefined, 'skeleton'));
+      $('books').replaceChildren(skeletonGrid);
+    }
+
+    function updateClearSearch() {
+      $('clearSearch').classList.toggle('is-visible', Boolean($('search').value));
+    }
+
+    function card(book) {
+      const article = makeElement('article', undefined, 'library-card');
+      const cover = makeElement('div', undefined, 'cover-area');
+      if (book.cover_image) {
+        const image = document.createElement('img');
+        image.src = book.cover_image;
+        image.alt = `${book.title || 'Book'} cover`;
+        cover.append(image);
+      } else {
+        cover.append(makeElement('div', book.title || 'LibraHub', 'cover-placeholder'));
+      }
+      const content = makeElement('div', undefined, 'card-content');
+      const category = makeElement('div', book.category?.category_name || 'General', 'card-category');
+      const title = makeElement('h3');
+      const link = makeElement('a', book.title || 'Untitled book');
+      link.href = `book.html?id=${encodeURIComponent(book._id)}`;
+      title.append(link);
+      const author = makeElement('p', `By ${book.author?.name || 'Unknown author'}`, 'card-author');
+      const description = makeElement('p', book.description || 'No description available.', 'card-description');
+      const meta = makeElement('div', undefined, 'card-meta');
+      const rating = makeElement('span', `★ ${book.rating_summary?.average || 0} (${book.rating_summary?.count || 0})`, 'rating');
+      const format = makeElement('span', (book.file_type || 'ebook').toUpperCase());
+      meta.append(rating, format);
+      const footer = makeElement('div', undefined, 'card-footer');
+      const date = book.published_date ? new Date(book.published_date).toLocaleDateString() : 'Recently added';
+      footer.append(makeElement('span', date, 'card-date'));
+      const view = makeElement('a', 'View details', 'button details-button');
+      view.href = link.href;
+      footer.append(view);
+      content.append(category, title, author, description, meta, footer);
+      article.append(cover, content);
+      return article;
+    }
+
+    function addBookmarkBadge(article) {
+      const badge = makeElement('span', '♥ Bookmarked', 'bookmark-badge');
+      article.querySelector('.cover-area').append(badge);
+    }
+
+    function renderEmpty() {
+      const empty = makeElement('div', undefined, 'empty-library');
+      empty.append(makeElement('div', '⌕', 'empty-library-icon'));
+      empty.append(makeElement('h3', 'No books found'));
+      empty.append(makeElement('p', 'Try a broader search or clear your filters to explore the full catalogue.'));
+      const clear = makeElement('button', 'Clear filters', 'button');
+      clear.type = 'button';
+      clear.addEventListener('click', clearFilters);
+      empty.append(clear);
+      $('books').replaceChildren(empty);
+    }
+
+    function renderPagination() {
+      const pagination = $('pagination');
+      pagination.replaceChildren();
+      if (state.pages <= 1) return;
+      const previous = makeElement('button', 'Previous', 'page-button');
+      previous.type = 'button';
+      previous.disabled = state.page === 1;
+      previous.addEventListener('click', () => { state.page -= 1; loadBooks(); });
+      pagination.append(previous);
+      const first = Math.max(1, state.page - 2);
+      const last = Math.min(state.pages, first + 4);
+      for (let page = first; page <= last; page += 1) {
+        const button = makeElement('button', String(page), `page-button${page === state.page ? ' current' : ''}`);
+        button.type = 'button';
+        button.setAttribute('aria-label', `Go to page ${page}`);
+        if (page === state.page) button.setAttribute('aria-current', 'page');
+        button.addEventListener('click', () => { state.page = page; loadBooks(); });
+        pagination.append(button);
+      }
+      const next = makeElement('button', 'Next', 'page-button');
+      next.type = 'button';
+      next.disabled = state.page === state.pages;
+      next.addEventListener('click', () => { state.page += 1; loadBooks(); });
+      pagination.append(next);
+    }
+
+    function updateSummary(payload) {
+      state.pages = Number(payload.pagination?.pages || 1);
+      state.total = Number(payload.pagination?.total || 0);
+      $('resultsSummary').textContent = `${state.total} ${state.total === 1 ? 'book' : 'books'} found · Page ${state.page} of ${state.pages}`;
+      const active = [];
+      if ($('search').value) active.push(`search: “${$('search').value}”`);
+      if ($('category').value) active.push('category filtered');
+      if ($('author').value) active.push('author filtered');
+      if ($('year').value) active.push(`year: ${$('year').value}`);
+      if ($('minRating').value) active.push(`${$('minRating').value}+ stars`);
+      $('filterHint').textContent = active.length ? active.join(' · ') : 'Browse the complete approved catalogue.';
+    }
+
+    async function loadCategories() {
+      const response = await fetch('/api/categories');
+      const payload = await response.json();
+      (payload.data || []).forEach(category => {
+        const option = makeElement('option', category.category_name);
+        option.value = category._id;
+        $('category').append(option);
+      });
+    }
+
+    async function loadBooks() {
+      const submit = document.querySelector('#filters button[type="submit"]');
+      submit.disabled = true;
+      submit.setAttribute('aria-busy', 'true');
+      $('message').textContent = 'Searching the catalogue…';
+      showSkeleton();
+      const params = new URLSearchParams({ page: state.page, limit: 12 });
+      ['search', 'category', 'author', 'sort', 'year', 'minRating'].forEach(id => {
+        if ($(id).value) params.set(id, $(id).value);
+      });
+      try {
+        const response = await fetch(`/api/books?${params}`);
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.message || 'Unable to load books');
+        const books = payload.data || [];
+        if (books.length) {
+          const cards = books.map(card);
+          $('books').replaceChildren(...cards);
+          const currentToken = token();
+          if (currentToken) {
+            await Promise.all(books.map(async (book, index) => {
+              const check = await fetch(`/api/bookmarks/check/${encodeURIComponent(book._id)}`, { headers: { Authorization: 'Bearer ' + currentToken } });
+              if (!check.ok) return;
+              const result = await check.json();
+              if (result.bookmarked) addBookmarkBadge(cards[index]);
+            }));
+          }
+          $('message').textContent = '';
+        } else {
+          renderEmpty();
+          $('message').textContent = '';
+        }
+        updateSummary(payload);
+        renderPagination();
+      } catch (error) {
+        $('books').replaceChildren();
+        $('message').textContent = error.message;
+        $('resultsSummary').textContent = 'We could not load the catalogue.';
+        $('pagination').replaceChildren();
+      } finally {
+        submit.disabled = false;
+        submit.removeAttribute('aria-busy');
+      }
+    }
+
+    function clearFilters() {
+      $('search').value = '';
+      $('category').value = '';
+      $('author').value = '';
+      $('year').value = '';
+      $('minRating').value = '';
+      $('sort').value = '';
+      state.page = 1;
+      updateClearSearch();
+      loadBooks();
+    }
+
+    $('filters').addEventListener('submit', event => {
+      event.preventDefault();
+      state.page = 1;
+      loadBooks();
+    });
+    $('search').addEventListener('input', updateClearSearch);
+    $('clearSearch').addEventListener('click', () => {
+      $('search').value = '';
+      updateClearSearch();
+      $('search').focus();
+    });
+    $('clearFilters').addEventListener('click', clearFilters);
+    ['category', 'author', 'year', 'minRating', 'sort'].forEach(id => {
+      $(id).addEventListener('change', () => { state.page = 1; loadBooks(); });
+    });
+    Promise.all([loadCategories(), loadBooks()]).catch(error => { $('message').textContent = error.message; });
+  </script>
+</body>
+</html>

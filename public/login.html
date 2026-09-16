@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Login - LibraHub</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script>document.documentElement.dataset.theme = localStorage.getItem('librahub-theme') === 'dark' ? 'dark' : 'light';</script>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/ui.css">
+  <link rel="stylesheet" href="css/animations.css">
   <style>
     :root{
-      --header-bg: #2c3e50;
       --accent: #3498db;
       --bg-1: #eef2ff;
       --bg-2: #f8fafc;
@@ -19,23 +22,22 @@
     *{box-sizing:border-box}
 
     /* Sticky header */
-    .site-nav{position:fixed;top:0;left:0;right:0;height:64px;background:var(--header-bg);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:0 2px 8px rgba(0,0,0,0.12);z-index:1000}
+    .site-nav{position:sticky;top:0;left:0;right:0;height:72px;background:rgba(255,255,255,.92);color:var(--theme-text);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,4vw,48px);border-bottom:1px solid var(--theme-border);box-shadow:var(--theme-shadow);backdrop-filter:blur(16px);z-index:1000}
     .site-nav .left{display:flex;align-items:center;gap:12px}
     .site-nav img.logo-img{height:45px;width:auto;border-radius:6px;transition:transform .18s ease;margin-top:6px;}
         .site-nav img.logo-img:hover{transform:translateY(2px) scale(1.06)}
     .site-nav .brand-title{font-weight:700;font-size:16px}
-    .site-nav .badge{background:#fff;color:var(--header-bg);padding:4px 8px;border-radius:8px;font-size:12px;margin-left:8px;font-weight:700}
-    .site-nav nav a{color:#fff;margin-left:18px;text-decoration:none;font-weight:600;transition:color .15s ease,transform .15s ease}
+    .site-nav nav a{color:var(--theme-muted);margin-left:18px;text-decoration:none;font-weight:700;transition:color .15s ease,transform .15s ease}
     .site-nav nav a:hover{color:var(--accent);transform:translateY(-2px)}
-    @media(max-width:720px){.site-nav{padding:0 12px;height:56px}.site-nav .brand-title{font-size:14px}.site-nav nav a{margin-left:12px;font-size:14px}}
+    @media(max-width:720px){.site-nav{height:auto;min-height:66px;flex-wrap:wrap;padding:10px 14px}.site-nav .brand-title{font-size:14px}.site-nav nav{order:3;width:100%;display:flex;justify-content:space-between;gap:8px}.site-nav nav a{margin-left:0;font-size:12px}}
 
-    body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;min-height:100vh;background:radial-gradient(1200px 600px at 10% 10%, rgba(52,152,219,0.04), transparent), linear-gradient(180deg,var(--bg-2),var(--bg-1));padding-top:76px}
+    body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;min-height:100vh;background:var(--theme-bg);padding-top:0}
 
-    .wrap{width:100%;max-width:var(--max-width);display:grid;grid-template-columns:1fr;gap:20px;align-items:center;margin:0 auto;padding:24px}
+    .wrap{width:min(1160px,calc(100% - 40px));max-width:1160px;display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:24px;align-items:stretch;margin:36px auto 70px;padding:0}
     @media(min-width:900px){.wrap{grid-template-columns:520px 1fr}}
     .brand{display:flex;align-items:center;gap:12px;margin-bottom:4px}
     .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;box-shadow:0 8px 30px rgba(79,70,229,0.12)}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,255,0.99));backdrop-filter: blur(6px);padding:28px;border-radius:var(--radius);box-shadow:0 10px 40px rgba(2,6,23,0.06);width:100%}
+    .card{background:var(--theme-surface);border:1px solid var(--theme-border);backdrop-filter: blur(6px);padding:28px;border-radius:22px;box-shadow:var(--theme-shadow);width:100%}
     .hero{padding:28px;border-radius:var(--radius);display:flex;flex-direction:column;gap:14px}
     h1{margin:0;font-size:22px;color:#0f172a}
     p.lead{margin:0;color:var(--muted)}
@@ -51,7 +53,7 @@
     .footer{margin-top:14px;text-align:center;color:var(--muted)}
     .illustration{display:none}
     @media(min-width:900px){
-      .illustration{display:block;background:linear-gradient(180deg,#fbfbff,#f7f8ff);padding:28px;border-radius:var(--radius);height:100%;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6)}
+      .illustration{display:block;background:var(--theme-elevated);border:1px solid var(--theme-border);padding:28px;border-radius:22px;height:100%;box-shadow:var(--theme-shadow)}
       .illustration h2{margin:0;font-size:20px}
       .illustration p{color:var(--muted)}
       .thumb{width:100%;height:280px;border-radius:10px;background:linear-gradient(135deg, rgba(79,70,229,0.06), rgba(6,182,212,0.04));display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:600}
@@ -61,18 +63,16 @@
     .socials button{flex:1;padding:10px;border-radius:10px;border:1px solid #e6edf3;background:#fff;cursor:pointer}
   </style>
 </head>
-<body>
+<body class="legacy-auth">
   <header class="site-nav">
-    <div class="left"><img src="images/logo.png" alt="logo" class="logo-img"><div>
-      <div class="brand-title">LibraHub</div>
-      <div style="font-size:12px;opacity:0.9">Manage, upload and read e-books</div>
-    </div></div>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="topic_form.html">Submit Topic</a>
-      <a href="login.html">Login</a>
-      <a href="register.html">Register</a>
-    </nav>
+    <div class="container nav-inner">
+      <a class="brand" href="index.html"><img src="images/logo.png" alt="LibraHub logo"><span class="brand-name">LibraHub</span></a>
+      <button class="nav-button" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Open navigation">☰</button>
+      <nav class="nav-links" id="navLinks" aria-label="Primary navigation">
+        <a href="index.html">Home</a><a href="library.html">Library</a><a href="dashboard.html">Dashboard</a><a href="topic_form.html">Submit a book</a>
+      </nav>
+      <div class="nav-actions"><a class="button small" href="login.html">Log in</a><a class="button small" href="register.html">Get started</a></div>
+    </div>
   </header>
 
   <div class="wrap">
@@ -148,6 +148,8 @@
     </div>
   </div>
 
+  <script src="js/theme.js"></script>
+  <script src="js/animations.js"></script>
   <script>
     const form = document.getElementById('loginForm');
     form.addEventListener('submit', async (e) => {
