@@ -50,6 +50,7 @@ app.get('/ready', (req, res) => {
 
 // Serve public static files
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/sample_books', express.static(path.join(__dirname, 'sample_books')));
 
 // Routes
 app.use('/api/auth', require('./src/routes/authRoutes'));
@@ -66,13 +67,15 @@ app.get('*', (req, res) => {
 });
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5000;
 let httpServer;
 let shuttingDown = false;
 
 async function startServer() {
   await connectDB();
-  httpServer = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  httpServer = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+  });
   return httpServer;
 }
 
