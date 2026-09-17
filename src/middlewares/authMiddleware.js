@@ -1,18 +1,23 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const mongoose = require('mongoose');
 
 module.exports = async (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ message: 'Unauthorized' });
-
-  const token = authHeader.split(' ')[1];
+  if (typeof authHeader !== 'string' || !/^Bearer\s+\S+$/.test(authHeader)) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+  const token = authHeader.slice(7);
   try {
     if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
       return res.status(500).json({ success: false, message: 'Authentication is not configured securely' });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded || typeof decoded.id !== 'string' || !mongoose.isValidObjectId(decoded.id)) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+    }
     const user = await User.findById(decoded.id).populate('role', 'role_name').lean();
-    if (!user) return res.status(401).json({ message: 'Unauthorized' });
+    if (!user || user.is_active === false) return res.status(401).json({ success: false, message: 'Unauthorized' });
     req.user = {
       id: user._id,
       name: user.name,

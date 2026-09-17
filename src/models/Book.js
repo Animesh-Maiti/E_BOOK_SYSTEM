@@ -6,16 +6,24 @@ const BookSchema = new mongoose.Schema({
   file_path: { type: String, trim: true },
   file_url: { type: String, trim: true },
   file_type: { type: String, enum: ['pdf', 'epub'] },
-  file_size: { type: Number, min: 0 },
+  file_size: { type: Number, min: 0, max: 20 * 1024 * 1024 },
   cover_image: { type: String, trim: true },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   uploaded_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   publisher: { type: String, trim: true, maxlength: 240 },
-  published_date: { type: Date },
+  published_date: {
+    type: Date,
+    validate: {
+      validator: value => value == null || !Number.isNaN(value.getTime()),
+      message: 'Published date must be valid',
+    },
+  },
   keywords: [{ type: String, trim: true, maxlength: 80 }],
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending', index: true },
   rejection_reason: { type: String, trim: true, maxlength: 1000 },
+  reviewed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  reviewed_at: { type: Date },
 }, { timestamps: true });
 
 BookSchema.index({ title: 'text', description: 'text', publisher: 'text', keywords: 'text' });

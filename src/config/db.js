@@ -4,8 +4,13 @@ const Role = require('../models/Role');
 const Category = require('../models/Category');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/ebook_db';
+let connectionPromise;
 
 const connectDB = async () => {
+  if (mongoose.connection.readyState === 1) return;
+  if (connectionPromise) return connectionPromise;
+
+  connectionPromise = (async () => {
   try {
     await mongoose.connect(MONGO_URI, {
       useNewUrlParser: true,
@@ -30,13 +35,27 @@ const connectDB = async () => {
       ['History', 'Historical works and research'],
       ['Arts', 'Visual and performing arts'],
     ].map(([category_name, description]) => ({
-      updateOne: { filter: { category_name }, update: { $setOnInsert: { category_name, description } }, upsert: true },
+      updateOne: {
+        filter: { category_name },
+        update: { $setOnInsert: { category_name, category_key: category_name.toLocaleLowerCase(), description } },
+        upsert: true,
+      },
     })));
     console.log('MongoDB connected');
   } catch (err) {
     console.error('MongoDB connection error:', err.message);
-    process.exit(1);
+    await mongoose.disconnect().catch(() => {});
+    throw err;
+  } finally {
+    connectionPromise = null;
   }
+  })();
+
+  return connectionPromise;
 };
 
 module.exports = connectDB;
+module.exports.isDatabaseReady = () => mongoose.connection.readyState === 1;
+module.exports.disconnectDB = async () => {
+  if (mongoose.connection.readyState !== 0) await mongoose.disconnect();
+};

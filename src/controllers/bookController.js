@@ -7,7 +7,42 @@ const { safeStoragePath } = require('../utils/helpers');
 const User = require('../models/User');
 const Feedback = require('../models/Feedback');
 const History = require('../models/History');
+const Bookmark = require('../models/Bookmark');
 const mongoose = require('mongoose');
+const { escapeRegex, boundedSearch } = require('../utils/validation');
+
+function removeUploadedFile(file) {
+  if (file && file.path) fs.unlink(file.path, () => {});
+}
+
+function validateBookFields({ title, description, published_date, keywords }, requireTitle = false) {
+  if (requireTitle && (typeof title !== 'string' || !title.trim())) return 'Title is required';
+  if (title !== undefined && (typeof title !== 'string' || !title.trim())) return 'Title is required';
+  if (typeof title === 'string' && title.trim().length > 240) return 'Title must be 240 characters or fewer';
+  if (description !== undefined && typeof description !== 'string') return 'Description must be text';
+  if (typeof description === 'string' && description.trim().length > 5000) return 'Description must be 5000 characters or fewer';
+  if (published_date !== undefined && published_date !== '') {
+    const parsedDate = new Date(published_date);
+    if (Number.isNaN(parsedDate.getTime())) return 'Published date must be valid';
+  }
+  if (keywords !== undefined && !Array.isArray(keywords) && typeof keywords !== 'string') {
+    return 'Keywords must be text or an array';
+  }
+  const keywordList = Array.isArray(keywords) ? keywords : typeof keywords === 'string' ? keywords.split(',') : [];
+  if (keywordList.length > 20) return 'A maximum of 20 keywords is allowed';
+  if (keywordList.some(keyword => typeof keyword !== 'string' || keyword.trim().length > 80)) {
+    return 'Each keyword must be 80 characters or fewer';
+  }
+  return null;
+}
+
+function normalizedKeywords(keywords) {
+  return keywords
+    ? (Array.isArray(keywords) ? keywords : keywords.split(','))
+      .map(keyword => keyword.trim())
+      .filter(Boolean)
+    : [];
+}
 
 function parseDateFilter(query, filter) {
   if (query.year) {
@@ -55,11 +90,23 @@ exports.submitBook = async (req, res) => {
     const { title, description, categoryId, keywords, published_date, publisher } = req.body;
     const file = req.file;
 
-    if (!title || !categoryId || !file) return res.status(400).json({ success: false, message: 'Title, category, and an ebook file are required' });
+    if (!title || !categoryId || !file) {
+      removeUploadedFile(file);
+      return res.status(400).json({ success: false, message: 'Title, category, and an ebook file are required' });
+    }
+    const fieldError = validateBookFields({ title, description, published_date, keywords }, true);
+    if (fieldError) {
+      removeUploadedFile(file);
+      return res.status(422).json({ success: false, message: fieldError });
+    }
+    if (typeof categoryId !== 'string' || !mongoose.isValidObjectId(categoryId)) {
+      removeUploadedFile(file);
+      return res.status(422).json({ success: false, message: 'Category must be a valid ID' });
+    }
 
     const category = await Category.findById(categoryId);
     if (!category) {
-      fs.unlink(file.path, () => {});
+      removeUploadedFile(file);
       return res.status(400).json({ success: false, message: 'Invalid category' });
     }
 
@@ -71,7 +118,7 @@ exports.submitBook = async (req, res) => {
       uploaded_by: req.user.id,
       publisher,
       published_date: published_date ? new Date(published_date) : undefined,
-      keywords: keywords ? (Array.isArray(keywords) ? keywords : keywords.split(',').map(k=>k.trim())) : [],
+      keywords: normalizedKeywords(keywords),
       file_path: path.relative(storageRoot, file.path),
       file_type: path.extname(file.originalname).toLowerCase().slice(1),
       file_size: file.size,
@@ -80,11 +127,12 @@ exports.submitBook = async (req, res) => {
     try {
       await book.save();
     } catch (error) {
-      fs.unlink(file.path, () => {});
+      removeUploadedFile(file);
       throw error;
     }
     res.status(201).json({ success: true, message: 'Book submitted for review', data: bookResponse(book.toObject()) });
   } catch (err) {
+    removeUploadedFile(req.file);
     throw err;
   }
 };
@@ -100,8 +148,8 @@ exports.getCategories = async (req, res) => {
 
 exports.getBooks = async (req, res) => {
   try {
-    const page = Number.parseInt(req.query.page, 10) || 1;
-    const limit = Number.parseInt(req.query.limit, 10) || 12;
+    const page = req.query.page === undefined ? 1 : Number.parseInt(req.query.page, 10);
+    const limit = req.query.limit === undefined ? 12 : Number.parseInt(req.query.limit, 10);
     if (!Number.isInteger(page) || page < 1) return res.status(422).json({ success: false, message: 'Page must be a positive integer' });
     if (!Number.isInteger(limit) || limit < 1 || limit > 50) return res.status(422).json({ success: false, message: 'Limit must be between 1 and 50' });
     const filter = { status: 'approved' };
@@ -126,9 +174,13 @@ exports.getBooks = async (req, res) => {
       ]);
       filter._id = { $in: ratedBooks.map(row => row._id) };
     }
-    if (req.query.search && String(req.query.search).trim()) {
-      const search = String(req.query.search).trim();
-      const authors = await User.find({ name: { $regex: search, $options: 'i' } }).select('_id').lean();
+    if (req.query.search && String(req.query.search).trim().length > 100) {
+      return res.status(422).json({ success: false, message: 'Search must be 100 characters or fewer' });
+    }
+    if (req.query.search && boundedSearch(req.query.search)) {
+      const search = boundedSearch(req.query.search);
+      const authorExpression = new RegExp(escapeRegex(search), 'i');
+      const authors = await User.find({ name: authorExpression }).select('_id').lean();
       filter.$or = [
         { $text: { $search: search } },
         { author: { $in: authors.map(author => author._id) } },
@@ -162,8 +214,38 @@ exports.getBook = async (req, res) => {
 };
 
 exports.getPendingBooks = async (req, res) => {
-  const books = await Book.find({ status: 'pending' }).populate('category', 'category_name').populate('author', 'name').sort('-createdAt');
-  res.json({ success: true, data: books.map(book => bookResponse(book.toObject())) });
+  const paginated = req.query.page !== undefined || req.query.limit !== undefined;
+  const page = req.query.page === undefined ? 1 : Number.parseInt(req.query.page, 10);
+  const limit = req.query.limit === undefined ? 20 : Number.parseInt(req.query.limit, 10);
+  if (!Number.isInteger(page) || page < 1) return res.status(422).json({ success: false, message: 'Page must be a positive integer' });
+  if (!Number.isInteger(limit) || limit < 1 || limit > 50) return res.status(422).json({ success: false, message: 'Limit must be between 1 and 50' });
+  const filter = { status: 'pending' };
+  if (req.query.author !== undefined) {
+    if (!mongoose.isValidObjectId(req.query.author)) return res.status(422).json({ success: false, message: 'Author must be a valid ID' });
+    filter.author = req.query.author;
+  }
+  if (req.query.search !== undefined) {
+    if (String(req.query.search).trim().length > 100) return res.status(422).json({ success: false, message: 'Search must be 100 characters or fewer' });
+    const search = boundedSearch(req.query.search);
+    if (search) {
+      const expression = new RegExp(escapeRegex(search), 'i');
+      const authors = await User.find({ name: expression }).select('_id').lean();
+      filter.$or = [
+        { title: expression },
+        { description: expression },
+        { publisher: expression },
+        { keywords: expression },
+        { author: { $in: authors.map(author => author._id) } },
+      ];
+    }
+  }
+  const query = Book.find(filter).populate('category', 'category_name').populate('author', 'name')
+    .sort({ createdAt: -1, _id: -1 });
+  if (paginated) query.skip((page - 1) * limit).limit(limit);
+  const [books, total] = await Promise.all([query, paginated ? Book.countDocuments(filter) : Promise.resolve(null)]);
+  const response = { success: true, data: books.map(book => bookResponse(book.toObject())) };
+  if (paginated) response.pagination = { page, limit, total, pages: Math.ceil(total / limit) };
+  res.json(response);
 };
 
 exports.getOwnBooks = async (req, res) => {
@@ -172,25 +254,96 @@ exports.getOwnBooks = async (req, res) => {
   res.json({ success: true, data: books.map(book => bookResponse(book, summaries.get(String(book._id)) || { average: 0, count: 0 })) });
 };
 
+exports.getMyBooks = async (req, res) => {
+  const page = req.query.page === undefined ? 1 : Number.parseInt(req.query.page, 10);
+  const limit = req.query.limit === undefined ? 12 : Number.parseInt(req.query.limit, 10);
+  if (!Number.isInteger(page) || page < 1) {
+    return res.status(422).json({ success: false, message: 'Page must be a positive integer' });
+  }
+  if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+    return res.status(422).json({ success: false, message: 'Limit must be between 1 and 50' });
+  }
+
+  const filter = { author: req.user.id };
+  if (req.query.status !== undefined) {
+    if (!['pending', 'approved', 'rejected'].includes(req.query.status)) {
+      return res.status(422).json({ success: false, message: 'Status must be pending, approved, or rejected' });
+    }
+    filter.status = req.query.status;
+  }
+  if (req.query.search !== undefined) {
+    if (String(req.query.search).trim().length > 100) {
+      return res.status(422).json({ success: false, message: 'Search must be 100 characters or fewer' });
+    }
+    const search = boundedSearch(req.query.search);
+    if (search) filter.title = new RegExp(escapeRegex(search), 'i');
+  }
+
+  const [books, total] = await Promise.all([
+    Book.find(filter)
+      .populate('category', 'category_name')
+      .populate('reviewed_by', 'name')
+      .sort({ createdAt: -1, _id: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    Book.countDocuments(filter),
+  ]);
+  const summaries = await ratingSummary(books.map(book => book._id));
+  res.json({
+    success: true,
+    data: books.map(book => bookResponse(book, summaries.get(String(book._id)) || { average: 0, count: 0 })),
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  });
+};
+
 exports.updateBook = async (req, res) => {
-  if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ success: false, message: 'Book not found' });
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    removeUploadedFile(req.file);
+    return res.status(404).json({ success: false, message: 'Book not found' });
+  }
   const book = await Book.findById(req.params.id);
-  if (!book) return res.status(404).json({ success: false, message: 'Book not found' });
-  if (!canManageBook(req, book)) return res.status(403).json({ success: false, message: 'You cannot modify this book' });
+  if (!book) {
+    removeUploadedFile(req.file);
+    return res.status(404).json({ success: false, message: 'Book not found' });
+  }
+  if (!canManageBook(req, book)) {
+    removeUploadedFile(req.file);
+    return res.status(403).json({ success: false, message: 'You cannot modify this book' });
+  }
+  if (req.user.role === 'Reader/Student') {
+    removeUploadedFile(req.file);
+    return res.status(403).json({ success: false, message: 'Readers cannot modify books' });
+  }
   if (book.status === 'approved' && String(book.author) === String(req.user.id) && !['Librarian', 'Content Manager', 'System Administrator'].includes(req.user.role)) {
+    removeUploadedFile(req.file);
     return res.status(403).json({ success: false, message: 'Approved books require catalogue management permission to edit' });
   }
   const allowed = ['title', 'description', 'categoryId', 'publisher', 'published_date', 'keywords'];
+  const fieldError = validateBookFields(req.body);
+  if (fieldError) {
+    removeUploadedFile(req.file);
+    return res.status(422).json({ success: false, message: fieldError });
+  }
   for (const field of allowed) {
     if (req.body[field] !== undefined) {
       const target = field === 'categoryId' ? 'category' : field;
       book[target] = field === 'keywords' && typeof req.body[field] === 'string'
-        ? req.body[field].split(',').map(value => value.trim()).filter(Boolean)
+        ? normalizedKeywords(req.body[field])
         : req.body[field];
     }
   }
-  if (req.body.categoryId && !await Category.exists({ _id: req.body.categoryId })) {
+  if (req.body.categoryId && (!mongoose.isValidObjectId(req.body.categoryId)
+    || !await Category.exists({ _id: req.body.categoryId }))) {
+    removeUploadedFile(req.file);
     return res.status(422).json({ success: false, message: 'Invalid category' });
+  }
+  const wasRejected = book.status === 'rejected';
+  if (wasRejected) {
+    book.status = 'pending';
+    book.rejection_reason = undefined;
+    book.reviewed_by = undefined;
+    book.reviewed_at = undefined;
   }
   if (req.file) {
     const previousPath = book.file_path;
@@ -204,11 +357,16 @@ exports.updateBook = async (req, res) => {
         if (oldPath) fs.unlink(oldPath, () => {});
       }
     } catch (error) {
-      fs.unlink(req.file.path, () => {});
+      removeUploadedFile(req.file);
       throw error;
     }
   } else {
-    await book.save();
+    try {
+      await book.save();
+    } catch (error) {
+      removeUploadedFile(req.file);
+      throw error;
+    }
   }
   res.json({ success: true, data: bookResponse(book.toObject()) });
 };
@@ -218,28 +376,49 @@ exports.deleteBook = async (req, res) => {
   const book = await Book.findById(req.params.id);
   if (!book) return res.status(404).json({ success: false, message: 'Book not found' });
   if (!canManageBook(req, book)) return res.status(403).json({ success: false, message: 'You cannot delete this book' });
+  if (req.user.role === 'Reader/Student') return res.status(403).json({ success: false, message: 'Readers cannot delete books' });
   await book.deleteOne();
-  if (book.file_path) {
-    const filePath = safeStoragePath(storageRoot, book.file_path);
-    if (filePath) fs.unlink(filePath, () => {});
-  }
+  await Promise.all([
+    Bookmark.deleteMany({ book: book._id }),
+    History.deleteMany({ book: book._id }),
+    Feedback.deleteMany({ book: book._id }),
+  ]);
+  [book.file_path, book.cover_image].forEach((storedPath) => {
+    if (storedPath) {
+      const filePath = safeStoragePath(storageRoot, storedPath);
+      if (filePath) fs.unlink(filePath, () => {});
+    }
+  });
   res.json({ success: true, message: 'Book deleted' });
 };
 
 exports.reviewBook = async (req, res) => {
-  const { status, rejection_reason } = req.body;
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(404).json({ success: false, message: 'Book not found' });
+  }
+  const action = req.body.action || req.body.status;
+  const status = action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : action;
+  const { rejection_reason } = req.body;
   if (!['approved', 'rejected'].includes(status)) {
-    return res.status(422).json({ success: false, message: 'Status must be approved or rejected' });
+    return res.status(422).json({ success: false, message: 'Action must be approve or reject' });
   }
   if (status === 'rejected' && !String(rejection_reason || '').trim()) {
     return res.status(422).json({ success: false, message: 'A rejection reason is required' });
   }
-  const book = await Book.findByIdAndUpdate(
-    req.params.id,
-    { status, rejection_reason: status === 'rejected' ? String(rejection_reason).trim() : undefined },
-    { new: true, runValidators: true },
-  );
+  if (rejection_reason !== undefined
+    && (typeof rejection_reason !== 'string' || rejection_reason.trim().length > 1000)) {
+    return res.status(422).json({ success: false, message: 'Rejection reason must be 1000 characters or fewer' });
+  }
+  const book = await Book.findById(req.params.id);
   if (!book) return res.status(404).json({ success: false, message: 'Book not found' });
+  if (book.status !== 'pending') {
+    return res.status(409).json({ success: false, message: 'Only pending books can be moderated' });
+  }
+  book.status = status;
+  book.rejection_reason = status === 'rejected' ? String(rejection_reason).trim() : undefined;
+  book.reviewed_by = req.user.id;
+  book.reviewed_at = new Date();
+  await book.save();
   res.json({ success: true, message: `Book ${status}`, data: bookResponse(book.toObject()) });
 };
 

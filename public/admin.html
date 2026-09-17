@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="LibraHub administration and moderation workspace.">
+  <title>Management Workspace - LibraHub</title>
+  <script>document.documentElement.dataset.theme = localStorage.getItem('librahub-theme') === 'dark' ? 'dark' : 'light';</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/ui.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <header class="site-nav admin-nav">
+    <div class="container nav-inner">
+      <a class="brand" href="index.html" aria-label="LibraHub home">
+        <img src="images/BPXFlSc9of6dE44zMZYplbASGuioQQpf2BIDIUdfTg6nMz4yy7I7Q9oAYffSfB2zFqsI-oq7Lx_WeA9dZ-62u2k95DplJoUBI2vLCG8Nq7vqkeEa8BErrfXVjMWgMnW9te3S56MGCiVsRf9h0xYqRl_3qHshbiC5kwkQNQkkh1fxtm4vLRaaemE7s0P30r8e.jpg" alt="LibraHub logo">
+        <span class="brand-name">LibraHub</span>
+      </a>
+      <button class="nav-button" id="menuButton" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Open navigation">☰</button>
+      <nav class="nav-links" id="navLinks" aria-label="Primary navigation">
+        <a href="index.html">Home</a>
+        <a href="library.html">Library</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a id="adminNavLink" class="active" href="admin.html" hidden>Management</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="button secondary small" id="loginLink" href="login.html">Log in</a>
+        <a class="button small" id="registerLink" href="register.html">Get started</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <section class="admin-hero reveal" aria-labelledby="pageTitle">
+      <div>
+        <p class="admin-kicker">LibraHub operations</p>
+        <h1 id="pageTitle">Management workspace</h1>
+        <p class="admin-subtitle">Keep the catalogue thoughtful, the community healthy, and every submission moving forward.</p>
+      </div>
+      <div class="admin-profile" id="adminProfile" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <div><strong>Checking access</strong><span>Verifying your account</span></div>
+      </div>
+    </section>
+
+    <section id="accessDenied" class="state-panel" hidden aria-live="polite">
+      <div class="state-symbol" aria-hidden="true">!</div>
+      <h2>Management access required</h2>
+      <p id="accessDeniedMessage">This workspace is reserved for authorized LibraHub staff.</p>
+      <a class="button" href="dashboard.html">Return to dashboard</a>
+    </section>
+
+    <div id="workspace" hidden>
+      <section class="summary-grid" aria-label="Workspace summary" data-reveal-stagger>
+        <article class="summary-card"><span class="summary-label">Pending review</span><strong id="pendingCount">—</strong><span>Books awaiting a decision</span></article>
+        <article class="summary-card"><span class="summary-label">Visible users</span><strong id="userCount">—</strong><span>Accounts in the current view</span></article>
+        <article class="summary-card"><span class="summary-label">Categories</span><strong id="categoryCount">—</strong><span>Topics in the catalogue</span></article>
+      </section>
+
+      <nav class="workspace-tabs" aria-label="Management sections" role="tablist">
+        <button class="tab-button active" id="moderationTab" type="button" role="tab" aria-selected="true" aria-controls="moderationPanel">Moderation</button>
+        <button class="tab-button" id="usersTab" type="button" role="tab" aria-selected="false" aria-controls="usersPanel" hidden>Users</button>
+        <button class="tab-button" id="categoriesTab" type="button" role="tab" aria-selected="false" aria-controls="categoriesPanel">Categories</button>
+      </nav>
+
+      <section class="workspace-panel" id="moderationPanel" role="tabpanel" aria-labelledby="moderationTab" data-reveal>
+        <div class="panel-heading">
+          <div><p class="panel-kicker">Editorial queue</p><h2>Pending books</h2><p>Review new submissions before they reach the public library.</p></div>
+          <button class="button secondary small" id="refreshModeration" type="button">Refresh queue</button>
+        </div>
+        <form class="filter-bar" id="moderationFilters">
+          <label>Search title or description<input id="moderationSearch" name="search" type="search" maxlength="100" placeholder="Find a submission"></label>
+          <label>Author ID<input id="moderationAuthor" name="author" type="text" inputmode="text" placeholder="Optional author ID"></label>
+          <button class="button small" type="submit">Apply filters</button>
+        </form>
+        <p class="inline-message" id="moderationMessage" role="status" aria-live="polite"></p>
+        <div id="moderationList" class="record-list" aria-live="polite"></div>
+        <div class="pagination" id="moderationPagination" hidden></div>
+      </section>
+
+      <section class="workspace-panel" id="usersPanel" role="tabpanel" aria-labelledby="usersTab" data-reveal hidden>
+        <div class="panel-heading">
+          <div><p class="panel-kicker">Account stewardship</p><h2>Users</h2><p>Manage roles and account access without exposing private credentials.</p></div>
+          <button class="button secondary small" id="refreshUsers" type="button">Refresh users</button>
+        </div>
+        <form class="filter-bar user-filter-bar" id="userFilters">
+          <label>Search name or email<input id="userSearch" name="search" type="search" maxlength="100" placeholder="Search accounts"></label>
+          <label>Role<select id="userRole" name="role"><option value="">All roles</option><option>Reader/Student</option><option>Author</option><option>Librarian</option><option>Content Manager</option><option>System Administrator</option></select></label>
+          <label>Status<select id="userStatus" name="active"><option value="">All statuses</option><option value="true">Active</option><option value="false">Inactive</option></select></label>
+          <button class="button small" type="submit">Apply filters</button>
+        </form>
+        <p class="inline-message" id="usersMessage" role="status" aria-live="polite"></p>
+        <div id="usersList" class="record-list" aria-live="polite"></div>
+        <div class="pagination" id="usersPagination" hidden></div>
+      </section>
+
+      <section class="workspace-panel" id="categoriesPanel" role="tabpanel" aria-labelledby="categoriesTab" data-reveal>
+        <div class="panel-heading">
+          <div><p class="panel-kicker">Catalogue structure</p><h2>Categories</h2><p>Shape the topics readers use to find their next book.</p></div>
+          <button class="button small" id="newCategory" type="button">Add category</button>
+        </div>
+        <p class="inline-message" id="categoriesMessage" role="status" aria-live="polite"></p>
+        <div id="categoriesList" class="category-grid" aria-live="polite"></div>
+      </section>
+    </div>
+  </main>
+
+  <dialog class="action-dialog" id="moderationDialog" aria-labelledby="moderationDialogTitle">
+    <form method="dialog" id="moderationForm">
+      <div class="dialog-heading"><p class="panel-kicker">Review decision</p><h2 id="moderationDialogTitle">Review book</h2></div>
+      <p id="moderationDialogBook" class="dialog-context"></p>
+      <label id="rejectionReasonField" hidden>Rejection reason<textarea id="rejectionReason" maxlength="1000" rows="4" placeholder="Tell the author what needs attention"></textarea></label>
+      <p class="dialog-message" id="moderationDialogMessage" role="alert"></p>
+      <div class="dialog-actions"><button class="button secondary" value="cancel" type="submit">Cancel</button><button class="button" id="confirmModeration" value="default" type="submit">Confirm</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="action-dialog" id="bookDetailsDialog" aria-labelledby="bookDetailsDialogTitle">
+    <form method="dialog">
+      <div class="dialog-heading"><p class="panel-kicker">Submission details</p><h2 id="bookDetailsDialogTitle">Book details</h2></div>
+      <div id="bookDetailsContent" class="details-list"></div>
+      <div class="dialog-actions"><button class="button" value="cancel" type="submit">Close</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="action-dialog" id="categoryDialog" aria-labelledby="categoryDialogTitle">
+    <form method="dialog" id="categoryForm">
+      <div class="dialog-heading"><p class="panel-kicker">Catalogue topic</p><h2 id="categoryDialogTitle">Add category</h2></div>
+      <label>Category name<input id="categoryName" name="category_name" maxlength="120" required></label>
+      <label>Description<textarea id="categoryDescription" name="description" maxlength="1000" rows="4"></textarea></label>
+      <p class="dialog-message" id="categoryDialogMessage" role="alert"></p>
+      <div class="dialog-actions"><button class="button secondary" value="cancel" type="submit">Cancel</button><button class="button" id="saveCategory" value="default" type="submit">Save category</button></div>
+    </form>
+  </dialog>
+
+  <script src="js/theme.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

@@ -11,6 +11,8 @@ function publicUser(user) {
     email: user.email,
     role: user.role && (user.role.role_name || user.role),
     profile_image: user.profile_image || null,
+    ...(user.createdAt ? { createdAt: user.createdAt } : {}),
+    ...(user.updatedAt ? { updatedAt: user.updatedAt } : {}),
   };
 }
 
