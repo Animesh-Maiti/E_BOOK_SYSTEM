@@ -103,7 +103,7 @@
         <div class="full">
           <label>Upload File (PDF / ePub) *</label>
           <label class="file-input" id="fileLabel">
-            <input id="file" type="file" accept="application/pdf,application/epub+zip">
+            <input id="file" name="bookFile" type="file" accept="application/pdf,application/epub+zip">
             <div>
               <div style="font-weight:600">Choose a file or drop here</div>
               <div class="file-meta">Supported: .pdf, .epub — Max 20MB</div>
@@ -112,6 +112,11 @@
           </label>
           <div id="fileError" class="err" role="alert" style="display:none;margin-top:8px"></div>
           <div id="filePreview" class="preview" style="display:none"></div>
+        </div>
+
+        <div class="full">
+          <label for="coverImage">Cover Thumbnail (PNG, JPEG, or WebP)</label>
+          <input id="coverImage" name="coverImage" type="file" accept="image/png, image/jpeg, image/webp">
         </div>
 
         <div class="actions">
@@ -241,7 +246,9 @@
       formData.append('publisher', document.getElementById('publisher').value);
 
       const file = fileInput.files[0];
-      if (file) formData.append('file', file);
+      if (file) formData.append('bookFile', file);
+      const coverImage = document.getElementById('coverImage').files[0];
+      if (coverImage) formData.append('coverImage', coverImage);
 
       try{
         const res = await fetch('/api/books/submit', {

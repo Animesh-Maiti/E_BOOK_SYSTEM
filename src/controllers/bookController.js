@@ -65,6 +65,12 @@ function parseDateFilter(query, filter) {
 
 function bookResponse(book, summary) {
   const response = { ...book };
+  const cover = response.coverImage || response.cover_image;
+  const coverUrl = cover
+    ? (/^(https?:\/\/|\/)/i.test(cover) ? cover : `/api/books/${response._id}/cover`)
+    : '';
+  response.coverImage = coverUrl;
+  response.cover_image = coverUrl;
   delete response.file_path;
   delete response.file_url;
   delete response.uploaded_by;
@@ -88,28 +94,35 @@ function canManageBook(req, book) {
 exports.submitBook = async (req, res) => {
   try {
     const { title, description, categoryId, keywords, published_date, publisher } = req.body;
-    const file = req.file;
+    const uploads = req.files || {};
+    const file = uploads.bookFile?.[0] || uploads.file?.[0] || req.file;
+    const coverFile = uploads.coverImage?.[0];
+    const removeUploads = () => {
+      removeUploadedFile(file);
+      removeUploadedFile(coverFile);
+    };
 
     if (!title || !categoryId || !file) {
-      removeUploadedFile(file);
+      removeUploads();
       return res.status(400).json({ success: false, message: 'Title, category, and an ebook file are required' });
     }
     const fieldError = validateBookFields({ title, description, published_date, keywords }, true);
     if (fieldError) {
-      removeUploadedFile(file);
+      removeUploads();
       return res.status(422).json({ success: false, message: fieldError });
     }
     if (typeof categoryId !== 'string' || !mongoose.isValidObjectId(categoryId)) {
-      removeUploadedFile(file);
+      removeUploads();
       return res.status(422).json({ success: false, message: 'Category must be a valid ID' });
     }
 
     const category = await Category.findById(categoryId);
     if (!category) {
-      removeUploadedFile(file);
+      removeUploads();
       return res.status(400).json({ success: false, message: 'Invalid category' });
     }
 
+    const isAdmin = ['System Administrator', 'admin'].includes(req.user.role);
     const book = new Book({
       title,
       description,
@@ -122,19 +135,32 @@ exports.submitBook = async (req, res) => {
       file_path: path.relative(storageRoot, file.path),
       file_type: path.extname(file.originalname).toLowerCase().slice(1),
       file_size: file.size,
+      coverImage: coverFile ? path.relative(storageRoot, coverFile.path) : '',
+      status: isAdmin ? 'approved' : 'pending',
     });
 
     try {
       await book.save();
     } catch (error) {
-      removeUploadedFile(file);
+      removeUploads();
       throw error;
     }
     res.status(201).json({ success: true, message: 'Book submitted for review', data: bookResponse(book.toObject()) });
   } catch (err) {
     removeUploadedFile(req.file);
+    if (req.files) Object.values(req.files).flat().forEach(removeUploadedFile);
     throw err;
   }
+};
+
+exports.getBookCover = async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ success: false, message: 'Book cover not found' });
+  const book = await Book.findOne({ _id: req.params.id, status: 'approved' }).lean();
+  const cover = book && (book.coverImage || book.cover_image);
+  if (!cover || /^(https?:\/\/|\/)/i.test(cover)) return res.status(404).json({ success: false, message: 'Book cover not found' });
+  const coverPath = safeStoragePath(storageRoot, cover);
+  if (!coverPath || !fs.existsSync(coverPath)) return res.status(404).json({ success: false, message: 'Book cover not found' });
+  return res.sendFile(coverPath);
 };
 
 exports.getCategories = async (req, res) => {

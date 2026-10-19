@@ -8,6 +8,7 @@ const BookSchema = new mongoose.Schema({
   file_type: { type: String, enum: ['pdf', 'epub'] },
   file_size: { type: Number, min: 0, max: 20 * 1024 * 1024 },
   cover_image: { type: String, trim: true },
+  coverImage: { type: String, default: '' },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   uploaded_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

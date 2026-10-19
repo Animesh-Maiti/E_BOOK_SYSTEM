@@ -510,9 +510,10 @@
     function card(book) {
       const article = makeElement('article', undefined, 'library-card');
       const cover = makeElement('div', undefined, 'cover-area');
-      if (book.cover_image) {
+      const coverImage = book.coverImage || book.cover_image;
+      if (coverImage) {
         const image = document.createElement('img');
-        image.src = book.cover_image;
+        image.src = coverImage;
         image.alt = `${book.title || 'Book'} cover`;
         cover.append(image);
       } else {
